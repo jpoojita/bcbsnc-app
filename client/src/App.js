@@ -4,31 +4,61 @@ import { Button } from '@material-ui/core';
 import BackupIcon from '@material-ui/icons/Backup';
 
 export default function App() {
-  const [img, setImg] = useState('');
-  const [imgCaption, setImgCaption] = useState('');
+  const [file, setfile] = useState('');
+  const [fileCaption, setfileCaption] = useState('');
 
-  const handleChange = e => {
-    setImg(e.target.value);
+  let handleChange = e => {
+    setfile(URL.createObjectURL(e.target.files[0]));
   };
-  const handleText = e => {
-    setImgCaption(e.target.value);
+  let handleText = e => {
+    setfileCaption(e.target.value);
   };
 
-  const handleUpload = async e => {};
+  let handleUpload = async e => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('fileCaption', fileCaption);
+
+    for (var value of formData.values()) {
+      console.log(value);
+    }
+
+    fetch('http://localhost:4000/upload', {
+      method: 'POST',
+      headers: {
+        'content-type': 'multipart/form-data',
+      },
+      body: formData,
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Response was not OK');
+        }
+        alert('The file is successfully uploaded');
+        return response.blob();
+      })
+      .then(formData => {
+        console.log('Success:', formData);
+      })
+      .catch(err => {
+        console.error('Error:', err);
+      });
+  };
 
   return (
     <div className="App">
       <div className="formImage flex-container space-around">
-        <form onSubmit={handleUpload}>
-          <div className="flex-item imgUpload">
-            <input type="file" name="img" onChange={handleChange} value={img} />
+        <form onSubmit={handleUpload} method="post">
+          <div className="flex-item fileUpload">
+            <input type="file" name="file" onChange={handleChange} />
           </div>
           <div className="flex-item">
             <input
               type="text"
-              name="imgCaption"
+              name="fileCaption"
               onChange={handleText}
-              value={imgCaption}
+              value={fileCaption}
             />
           </div>
           <div className="flex-item">
@@ -44,6 +74,17 @@ export default function App() {
           </div>
         </form>
       </div>
+      {file && fileCaption && (
+        <div className="display">
+          <ul>
+            <li>
+              <img src={file} alt={fileCaption} />
+              <br />
+              <span> Caption: {fileCaption}</span>
+            </li>
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
